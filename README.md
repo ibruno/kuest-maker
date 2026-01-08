@@ -102,7 +102,11 @@ cp .env.example .env
 
 Edit the `.env` file with your credentials:
 - `PK`: Your private key for Kuest
-- `BROWSER_ADDRESS`: Your wallet address
+- `KUEST_ADDRESS`: Your wallet address
+- `KUEST_API_KEY`: API key from auth.kuest.com
+- `KUEST_API_SECRET`: API secret from auth.kuest.com
+- `KUEST_PASSPHRASE`: API passphrase from auth.kuest.com
+- `KUEST_HOST`: Optional API host (default `https://clob.kuest.com`)
 - `DATABASE_URL`: Postgres connection string
 
 **Important:** Make sure your wallet has done at least one trade through the UI so that the permissions are proper.

@@ -2111,7 +2111,7 @@ dependencies = [
 [[package]]
 name = "py-clob-client"
 version = "0.34.4"
-source = { git = "https://github.com/kuestcom/py-clob-client?rev=main#99dece8c7f991a5d3d52ac00a759f64d005a8441" }
+source = { git = "https://github.com/kuestcom/py-clob-client?rev=main#2e2f8187976deb20767a8982f820971851de01c8" }
 dependencies = [
     { name = "eth-account" },
     { name = "eth-utils" },

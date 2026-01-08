@@ -99,7 +99,10 @@ async function mergePositions(amountToMerge, conditionId, isNegRiskMarket) {
     };
 
     // Get the Safe address from environment variables
-    const safeAddress = process.env.BROWSER_ADDRESS;
+    const safeAddress = process.env.KUEST_ADDRESS;
+    if (!safeAddress) {
+      throw new Error("KUEST_ADDRESS is not set");
+    }
     const safe = new ethers.Contract(safeAddress, safeAbi, wallet);
 
     // Execute the transaction through the Safe

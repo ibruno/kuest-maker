@@ -20,25 +20,25 @@ def get_sel_df(sheet_name='Selected Markets'):
     return sel_df
     
 def get_all_markets(client):
-    cursor = ""
+    cursor = "MA=="
     all_markets = []
 
     while True:
         try:
             markets = client.get_sampling_markets(next_cursor = cursor)
+            if not markets or "data" not in markets:
+                break
             markets_df = pd.DataFrame(markets['data'])
-
-
-            cursor = markets['next_cursor']
-            
-
-
             all_markets.append(markets_df)
 
+            cursor = markets.get('next_cursor')
             if cursor is None:
                 break
         except:
             break
+
+    if not all_markets:
+        return pd.DataFrame()
 
     all_df = pd.concat(all_markets)
     all_df = all_df.reset_index(drop=True)

@@ -2,6 +2,7 @@ import kuest_data.global_state as global_state
 from kuest_data.utils import get_sheet_df
 import time
 import kuest_data.global_state as global_state
+import pandas as pd
 
 #sth here seems to be removing the position
 def update_positions(avgOnly=False):
@@ -148,8 +149,23 @@ def set_order(token, side, size, price):
 def update_markets():
     received_df, received_params = get_sheet_df()
 
-    if len(received_df) > 0:
-        global_state.df, global_state.params = received_df.copy(), received_params
+    if received_df is None or received_df.empty:
+        print("No market config found in Postgres. Populate Selected/All Markets first.")
+        global_state.df = pd.DataFrame()
+        global_state.params = {}
+        return
+
+    if not received_params:
+        print("No Hyperparameters found in Postgres. Populate Hyperparameters first.")
+        global_state.df = received_df.copy()
+        global_state.params = {}
+        return
+
+    global_state.df, global_state.params = received_df.copy(), received_params
+
+    if global_state.df is None or global_state.df.empty:
+        print("Market config is empty after load.")
+        return
     
 
     for _, row in global_state.df.iterrows():

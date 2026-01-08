@@ -17,22 +17,30 @@ import os
 
 MAX_INT = 2**256 - 1
 
-def get_clob_client():
+def get_clob_client(require_creds: bool = False):
     host = "https://clob.kuest.com"
     key = os.getenv("PK")
     chain_id = AMOY  # Mainnet: POLYGON
     
-    if key is None:
-        print("Environment variable 'PK' cannot be found")
-        return None
+    if key:
+        client = ClobClient(host, key=key, chain_id=chain_id)
+    else:
+        if require_creds:
+            print("Environment variable 'PK' cannot be found")
+            return None
+        return ClobClient(host, chain_id=chain_id)
 
+    if not require_creds:
+        return client
 
     try:
-        client = ClobClient(host, key=key, chain_id=chain_id)
         api_creds = client.create_or_derive_api_creds()
+        if not api_creds:
+            print("Error creating API creds")
+            return None
         client.set_api_creds(api_creds)
         return client
-    except Exception as ex: 
+    except Exception as ex:
         print("Error creating clob client")
         print("________________")
         print(ex)
@@ -122,10 +130,13 @@ def market_action( marketId, action, price, size ):
         side=action,
         token_id=marketId,
     )
-    signed_order = get_clob_client().create_order(order_args)
+    client = get_clob_client(require_creds=True)
+    if client is None:
+        raise RuntimeError("Missing API creds for order placement")
+    signed_order = client.create_order(order_args)
     
     try:
-        resp = get_clob_client().post_order(signed_order)
+        resp = client.post_order(signed_order)
         print(resp)
     except Exception as ex:
         print(ex)
@@ -133,7 +144,9 @@ def market_action( marketId, action, price, size ):
     
     
 def get_position(marketId):
-    client = get_clob_client()
+    client = get_clob_client(require_creds=True)
+    if client is None:
+        raise RuntimeError("Missing API creds for balance lookup")
     position_res = client.get_balance_allowance(
         BalanceAllowanceParams(
             asset_type=AssetType.CONDITIONAL,

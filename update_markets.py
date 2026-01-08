@@ -12,7 +12,7 @@ from kuest_utils.postgres_utils import replace_sheet_rows
 import traceback
 
 # Initialize global variables
-client = get_clob_client()
+client = get_clob_client(require_creds=False)
 
 
 def update_sheet(data, sheet_name):
@@ -61,12 +61,15 @@ def sort_df(df):
 def fetch_and_process_data():
     global client, sel_df
 
-    client = get_clob_client()
+    client = get_clob_client(require_creds=False)
 
     sel_df = get_sel_df("Selected Markets")
 
 
     all_df = get_all_markets(client)
+    if all_df.empty:
+        print("No markets returned from sampling endpoint.")
+        return
     print("Got all Markets")
     all_results = get_all_results(all_df, client)
     print("Got all Results")
@@ -95,12 +98,13 @@ def fetch_and_process_data():
 
     print(f'{pd.to_datetime("now")}: Fetched select market of length {len(new_df)}.')
 
-    if len(new_df) > 50:
-        update_sheet(new_df, "All Markets")
-        update_sheet(volatility_df, "Volatility Markets")
-        update_sheet(m_data, "Full Markets")
-    else:
-        print(f'{pd.to_datetime("now")}: Not updating tables because of length {len(new_df)}.')
+    if len(new_df) == 0:
+        print(f'{pd.to_datetime("now")}: Not updating tables because result is empty.')
+        return
+
+    update_sheet(new_df, "All Markets")
+    update_sheet(volatility_df, "Volatility Markets")
+    update_sheet(m_data, "Full Markets")
 
 if __name__ == "__main__":
     while True:

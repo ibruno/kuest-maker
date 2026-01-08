@@ -3,7 +3,13 @@ import os                           # Operating system interface
 
 # Kuest API client libraries
 from py_clob_client.client import ClobClient
-from py_clob_client.clob_types import OrderArgs, BalanceAllowanceParams, AssetType, PartialCreateOrderOptions
+from py_clob_client.clob_types import (
+    ApiCreds,
+    OrderArgs,
+    BalanceAllowanceParams,
+    AssetType,
+    PartialCreateOrderOptions,
+)
 from py_clob_client.constants import AMOY, POLYGON
 
 # Web3 libraries for blockchain interaction
@@ -45,16 +51,30 @@ class KuestClient:
         Args:
             pk (str, optional): Private key identifier, defaults to 'default'
         """
-        host = os.getenv("CLOB_HOST", "https://clob.kuest.com")
+        host = os.getenv("KUEST_HOST", "https://clob.kuest.com")
 
         # Get credentials from environment variables
-        key=os.getenv("PK")
-        browser_address = os.getenv("BROWSER_ADDRESS")
+        key = os.getenv("PK")
+        kuest_address = os.getenv("KUEST_ADDRESS")
+        api_key = os.getenv("KUEST_API_KEY")
+        api_secret = os.getenv("KUEST_API_SECRET")
+        api_passphrase = os.getenv("KUEST_PASSPHRASE")
+
+        if not key:
+            raise ValueError("PK is not set")
+
+        if not kuest_address:
+            raise ValueError("KUEST_ADDRESS is not set")
+
+        if not api_key or not api_secret or not api_passphrase:
+            raise ValueError(
+                "KUEST_API_KEY, KUEST_API_SECRET, and KUEST_PASSPHRASE are required"
+            )
 
         # Don't print sensitive wallet information
         print("Initializing Kuest client...")
         chain_id = AMOY  # Mainnet: POLYGON
-        self.browser_wallet=Web3.to_checksum_address(browser_address)
+        self.browser_wallet = Web3.to_checksum_address(kuest_address)
 
         # Initialize the Kuest API client
         self.client = ClobClient(
@@ -66,7 +86,11 @@ class KuestClient:
         )
 
         # Set up API credentials
-        self.creds = self.client.create_or_derive_api_creds()
+        self.creds = ApiCreds(
+            api_key=api_key,
+            api_secret=api_secret,
+            api_passphrase=api_passphrase,
+        )
         self.client.set_api_creds(creds=self.creds)
         
         # Initialize Web3 connection to Amoy
