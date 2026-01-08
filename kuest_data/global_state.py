@@ -12,15 +12,15 @@ REVERSE_TOKENS = {}
 # Order book data for all markets
 all_data = {}  
 
-# Market configuration data from Google Sheets
+# Market configuration data from Postgres
 df = None  
 
 # ============ Client & Parameters ============
 
-# Polymarket client instance
+# Kuest client instance
 client = None
 
-# Trading parameters from Google Sheets
+# Trading parameters from Postgres
 params = {}
 
 # Lock for thread-safe trading operations
@@ -46,4 +46,3 @@ orders = {}
 # Current positions for each token
 # Format: {token_id: {'size': float, 'avgPrice': float}}
 positions = {}
-

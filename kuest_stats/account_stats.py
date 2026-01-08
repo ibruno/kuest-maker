@@ -2,20 +2,21 @@ import pandas as pd
 from py_clob_client.headers.headers import create_level_2_headers
 from py_clob_client.clob_types import RequestArgs
 
-from poly_utils.google_utils import get_spreadsheet
-from gspread_dataframe import set_with_dataframe
+from kuest_utils.postgres_utils import fetch_sheet_df, replace_sheet_rows
 import requests
 import json
 import os
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
-spreadsheet = get_spreadsheet()
-
-def get_markets_df(wk_full):
-    markets_df = pd.DataFrame(wk_full.get_all_records())
-    markets_df = markets_df[['question', 'answer1', 'answer2', 'token1', 'token2']]
+def get_markets_df():
+    markets_df = fetch_sheet_df("Full Markets")
+    required_cols = ['question', 'answer1', 'answer2', 'token1', 'token2']
+    if markets_df.empty or not set(required_cols).issubset(markets_df.columns):
+        return pd.DataFrame(columns=required_cols)
+    markets_df = markets_df[required_cols]
     markets_df['token1'] = markets_df['token1'].astype(str)
     markets_df['token2'] = markets_df['token2'].astype(str)
     return markets_df
@@ -73,9 +74,13 @@ def combine_dfs(orders_df, positions, markets_df, selected_df):
     return combined_df
 
 def get_earnings(client):
+    # Rewards endpoint is not available in Kuest yet.
+    return pd.DataFrame(columns=["question", "earnings", "earning_percentage"])
+
+    # Legacy flow (kept for reference)
     args = RequestArgs(method='GET', request_path='/rewards/user/markets')
     l2Headers = create_level_2_headers(client.signer, client.creds, args)
-    url = "https://polymarket.com/api/rewards/markets"
+    url = "https://kuest.com/api/rewards/markets"
 
     cursor = ''
     markets = []
@@ -103,16 +108,15 @@ def get_earnings(client):
 
 
 def update_stats_once(client):
-    spreadsheet = get_spreadsheet()
-    wk_full = spreadsheet.worksheet('Full Markets')
-    wk_summary = spreadsheet.worksheet('Summary')
-
-
-    wk_sel = spreadsheet.worksheet('Selected Markets')
-    selected_df = pd.DataFrame(wk_sel.get_all_records())
+    selected_df = fetch_sheet_df("Selected Markets")
+    if selected_df.empty or "question" not in selected_df.columns:
+        selected_df = pd.DataFrame(columns=["question"])
     
-    markets_df = get_markets_df(wk_full)
-    print("Got spreadsheet...")
+    markets_df = get_markets_df()
+    print("Loaded market config from Postgres...")
+    if markets_df.empty:
+        print("Full Markets is empty. Skipping summary update.")
+        return
 
     orders_df = get_all_orders(client)
     print("Got Orders...")
@@ -130,8 +134,6 @@ def update_stats_once(client):
 
         combined_df = combined_df.sort_values('earnings', ascending=False)
         combined_df = combined_df[['question', 'answer', 'order_size', 'position_size', 'marketInSelected', 'earnings', 'earning_percentage']]
-        wk_summary.clear()
-
-        set_with_dataframe(wk_summary, combined_df, include_index=False, include_column_header=True, resize=True)
+        replace_sheet_rows("Summary", combined_df)
     else:
         print("Position or order is empty")

@@ -1,12 +1,12 @@
 import json
 from sortedcontainers import SortedDict
-import poly_data.global_state as global_state
-import poly_data.CONSTANTS as CONSTANTS
+import kuest_data.global_state as global_state
+import kuest_data.CONSTANTS as CONSTANTS
 
 from trading import perform_trade
 import time 
 import asyncio
-from poly_data.data_utils import set_position, set_order, update_positions
+from kuest_data.data_utils import set_position, set_order, update_positions
 
 def process_book_data(asset, json_data):
     global_state.all_data[asset] = {

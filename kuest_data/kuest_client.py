@@ -1,10 +1,10 @@
 from dotenv import load_dotenv          # Environment variable management
 import os                           # Operating system interface
 
-# Polymarket API client libraries
+# Kuest API client libraries
 from py_clob_client.client import ClobClient
 from py_clob_client.clob_types import OrderArgs, BalanceAllowanceParams, AssetType, PartialCreateOrderOptions
-from py_clob_client.constants import POLYGON
+from py_clob_client.constants import AMOY, POLYGON
 
 # Web3 libraries for blockchain interaction
 from web3 import Web3
@@ -19,15 +19,15 @@ import subprocess                   # For calling external processes
 from py_clob_client.clob_types import OpenOrderParams
 
 # Smart contract ABIs
-from poly_data.abis import NegRiskAdapterABI, ConditionalTokenABI, erc20_abi
+from kuest_data.abis import NegRiskAdapterABI, ConditionalTokenABI, erc20_abi
 
 # Load environment variables
 load_dotenv()
 
 
-class PolymarketClient:
+class KuestClient:
     """
-    Client for interacting with Polymarket's API and smart contracts.
+    Client for interacting with Kuest's API and smart contracts.
     
     This class provides methods for:
     - Creating and managing orders
@@ -35,28 +35,28 @@ class PolymarketClient:
     - Checking balances and positions
     - Merging positions
     
-    The client connects to both the Polymarket API and the Polygon blockchain.
+    The client connects to both the Kuest API and the Polygon blockchain.
     """
     
     def __init__(self, pk='default') -> None:
         """
-        Initialize the Polymarket client with API and blockchain connections.
+        Initialize the Kuest client with API and blockchain connections.
         
         Args:
             pk (str, optional): Private key identifier, defaults to 'default'
         """
-        host="https://clob.polymarket.com"
+        host = os.getenv("CLOB_HOST", "https://clob.kuest.com")
 
         # Get credentials from environment variables
         key=os.getenv("PK")
         browser_address = os.getenv("BROWSER_ADDRESS")
 
         # Don't print sensitive wallet information
-        print("Initializing Polymarket client...")
-        chain_id=POLYGON
+        print("Initializing Kuest client...")
+        chain_id = AMOY  # Mainnet: POLYGON
         self.browser_wallet=Web3.to_checksum_address(browser_address)
 
-        # Initialize the Polymarket API client
+        # Initialize the Kuest API client
         self.client = ClobClient(
             host=host,
             key=key,
@@ -69,21 +69,24 @@ class PolymarketClient:
         self.creds = self.client.create_or_derive_api_creds()
         self.client.set_api_creds(creds=self.creds)
         
-        # Initialize Web3 connection to Polygon
-        web3 = Web3(Web3.HTTPProvider("https://polygon-rpc.com"))
+        # Initialize Web3 connection to Amoy
+        rpc_url = os.getenv("AMOY_RPC_URL", "https://rpc-amoy.polygon.technology/")
+        # Mainnet RPC: https://polygon-rpc.com
+        web3 = Web3(Web3.HTTPProvider(rpc_url))
         web3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
         
         # Set up USDC contract for balance checks
         self.usdc_contract = web3.eth.contract(
-            address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", 
-            abi=erc20_abi
+            address="0x29604FdE966E3AEe42d9b5451BD9912863b3B904",  # Mainnet: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+            abi=erc20_abi,
         )
 
         # Store key contract addresses
         self.addresses = {
-            'neg_risk_adapter': '0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296',
-            'collateral': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-            'conditional_tokens': '0x4D97DCd97eC945f40cF65F87097ACe5EA0476045'
+            # Amoy deployments (Kuest)
+            "neg_risk_adapter": "0xA8D45917999a9c3833C797EFfB31e3D878e27A33",
+            "collateral": "0x29604FdE966E3AEe42d9b5451BD9912863b3B904",  # Mainnet: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+            "conditional_tokens": "0x9432978d0f8A0E1a5317DD545B4a9ad32da8AD59",
         }
 
         # Initialize contract interfaces
@@ -102,7 +105,7 @@ class PolymarketClient:
     
     def create_order(self, marketId, action, price, size, neg_risk=False):
         """
-        Create and submit a new order to the Polymarket order book.
+        Create and submit a new order to the Kuest order book.
         
         Args:
             marketId (str): ID of the market token to trade
@@ -168,7 +171,7 @@ class PolymarketClient:
         Returns:
             float: Total position value in USDC
         """
-        res = requests.get(f'https://data-api.polymarket.com/value?user={self.browser_wallet}')
+        res = requests.get(f'https://data-api.kuest.com/value?user={self.browser_wallet}')
         return float(res.json()['value'])
 
     def get_total_balance(self):
@@ -187,7 +190,7 @@ class PolymarketClient:
         Returns:
             DataFrame: All positions with details like market, size, avgPrice
         """
-        res = requests.get(f'https://data-api.polymarket.com/positions?user={self.browser_wallet}')
+        res = requests.get(f'https://data-api.kuest.com/positions?user={self.browser_wallet}')
         return pd.DataFrame(res.json())
     
     def get_raw_position(self, tokenId):
@@ -285,7 +288,7 @@ class PolymarketClient:
         """
         Merge positions in a market to recover collateral.
         
-        This function calls the external poly_merger Node.js script to execute
+        This function calls the external kuest_merger Node.js script to execute
         the merge operation on-chain. When you hold both YES and NO positions
         in the same market, merging them recovers your USDC.
         
@@ -303,7 +306,7 @@ class PolymarketClient:
         amount_to_merge_str = str(amount_to_merge)
 
         # Prepare the command to run the JavaScript script
-        node_command = f'node poly_merger/merge.js {amount_to_merge_str} {condition_id} {"true" if is_neg_risk_market else "false"}'
+        node_command = f'node kuest_merger/merge.js {amount_to_merge_str} {condition_id} {"true" if is_neg_risk_market else "false"}'
         print(node_command)
 
         # Run the command and capture the output

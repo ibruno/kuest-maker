@@ -1,7 +1,7 @@
-import poly_data.global_state as global_state
-from poly_data.utils import get_sheet_df
+import kuest_data.global_state as global_state
+from kuest_data.utils import get_sheet_df
 import time
-import poly_data.global_state as global_state
+import kuest_data.global_state as global_state
 
 #sth here seems to be removing the position
 def update_positions(avgOnly=False):

@@ -4,20 +4,20 @@ import os
 import requests
 import time
 import warnings
+
+from kuest_utils.postgres_utils import fetch_sheet_df
 warnings.filterwarnings("ignore")
 
 
 if not os.path.exists('data'):
     os.makedirs('data')
 
-def get_sel_df(spreadsheet, sheet_name='Selected Markets'):
-    try:
-        wk2 = spreadsheet.worksheet(sheet_name)
-        sel_df = pd.DataFrame(wk2.get_all_records())
-        sel_df = sel_df[sel_df['question'] != ""].reset_index(drop=True)
-        return sel_df
-    except:
-        return pd.DataFrame()
+def get_sel_df(sheet_name='Selected Markets'):
+    sel_df = fetch_sheet_df(sheet_name)
+    if sel_df.empty or 'question' not in sel_df.columns:
+        return pd.DataFrame(columns=["question"])
+    sel_df = sel_df[sel_df['question'] != ""].reset_index(drop=True)
+    return sel_df
     
 def get_all_markets(client):
     cursor = ""
@@ -264,7 +264,7 @@ def calculate_annualized_volatility(df, hours):
     return round(annualized_volatility, 2)
 
 def add_volatility(row):
-    res = requests.get(f'https://clob.polymarket.com/prices-history?interval=1m&market={row["token1"]}&fidelity=10')
+    res = requests.get(f'https://clob.kuest.com/prices-history?interval=1m&market={row["token1"]}&fidelity=10')
     price_df = pd.DataFrame(res.json()['history'])
     price_df['t'] = pd.to_datetime(price_df['t'], unit='s')
     price_df['p'] = price_df['p'].round(2)

@@ -1,7 +1,7 @@
 /**
- * Poly-Merger: Position Merging Utility for Polymarket
+ * Kuest-Merger: Position Merging Utility for Kuest
  * 
- * This script handles merging of YES and NO positions in Polymarket prediction markets
+ * This script handles merging of YES and NO positions in Kuest prediction markets
  * to recover collateral. It works with both regular and negative risk markets.
  * 
  * The merger supports Gnosis Safe wallets through the safe-helpers.js utility.
@@ -25,19 +25,21 @@ const parentEnvPath = resolve(__dirname, '../.env');
 const envPath = existsSync(localEnvPath) ? localEnvPath : parentEnvPath;
 require('dotenv').config({ path: envPath })
 
-// Connect to Polygon network
-const provider = new ethers.providers.JsonRpcProvider("https://polygon-rpc.com");
+// Connect to Amoy network
+const rpcUrl = process.env.AMOY_RPC_URL || "https://rpc-amoy.polygon.technology/";
+// Mainnet RPC: https://polygon-rpc.com
+const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 const privateKey = process.env.PK;
 const wallet = new ethers.Wallet(privateKey, provider);
 
-// Polymarket contract addresses
+// Kuest contract addresses (Amoy)
 const addresses = {
   // Adapter contract for negative risk markets
-  neg_risk_adapter: '0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296',
+  neg_risk_adapter: '0xA8D45917999a9c3833C797EFfB31e3D878e27A33',
   // USDC token contract on Polygon
-  collateral: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+  collateral: '0x29604FdE966E3AEe42d9b5451BD9912863b3B904',
   // Main conditional tokens contract for prediction markets
-  conditional_tokens: '0x4D97DCd97eC945f40cF65F87097ACe5EA0476045'
+  conditional_tokens: '0x9432978d0f8A0E1a5317DD545B4a9ad32da8AD59'
 };
 
 // Minimal ABIs for the contracts we interact with
@@ -50,7 +52,7 @@ const conditionalTokensAbi = [
 ];
 
 /**
- * Merges YES and NO positions in a Polymarket prediction market to recover USDC collateral.
+ * Merges YES and NO positions in a Kuest prediction market to recover USDC collateral.
  * 
  * This function handles both regular and negative risk markets via different contract calls.
  * It uses the Gnosis Safe wallet infrastructure for secure transaction execution.
@@ -90,7 +92,7 @@ async function mergePositions(amountToMerge, conditionId, isNegRiskMarket) {
     // Prepare full transaction object
     const transaction = {
       ...tx,
-      chainId: 137,       // Polygon chain ID
+      chainId: 80002,       // Amoy chain ID (mainnet: 137)
       gasPrice: gasPrice,
       gasLimit: gasLimit,
       nonce: nonce

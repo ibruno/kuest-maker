@@ -6,12 +6,12 @@ import traceback                # Exception handling
 import pandas as pd             # Data analysis library
 import math                     # Mathematical functions
 
-import poly_data.global_state as global_state
-import poly_data.CONSTANTS as CONSTANTS
+import kuest_data.global_state as global_state
+import kuest_data.CONSTANTS as CONSTANTS
 
 # Import utility functions for trading
-from poly_data.trading_utils import get_best_bid_ask_deets, get_order_prices, get_buy_sell_amount, round_down, round_up
-from poly_data.data_utils import get_position, get_order, set_position
+from kuest_data.trading_utils import get_best_bid_ask_deets, get_order_prices, get_buy_sell_amount, round_down, round_up
+from kuest_data.data_utils import get_position, get_order, set_position
 
 # Create directory for storing position risk information
 if not os.path.exists('positions/'):

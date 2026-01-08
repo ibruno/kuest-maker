@@ -1,4 +1,5 @@
 output.txt
+.DS_Store
 data/
 credentials.json
 */credentials.json

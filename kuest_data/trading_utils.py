@@ -1,6 +1,6 @@
 import math 
-from poly_data.data_utils import update_positions
-import poly_data.global_state as global_state
+from kuest_data.data_utils import update_positions
+import kuest_data.global_state as global_state
 
 # def get_avgPrice(position, assetId):
 #     curr_global = global_state.all_positions[global_state.all_positions['asset'] == str(assetId)]

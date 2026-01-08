@@ -4,11 +4,11 @@ import asyncio                 # Asynchronous I/O
 import traceback               # Exception handling
 import threading               # Thread management
 
-from poly_data.polymarket_client import PolymarketClient
-from poly_data.data_utils import update_markets, update_positions, update_orders
-from poly_data.websocket_handlers import connect_market_websocket, connect_user_websocket
-import poly_data.global_state as global_state
-from poly_data.data_processing import remove_from_performing
+from kuest_data.kuest_client import KuestClient
+from kuest_data.data_utils import update_markets, update_positions, update_orders
+from kuest_data.websocket_handlers import connect_market_websocket, connect_user_websocket
+import kuest_data.global_state as global_state
+from kuest_data.data_processing import remove_from_performing
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,9 +17,9 @@ def update_once():
     """
     Initialize the application state by fetching market data, positions, and orders.
     """
-    update_markets()    # Get market information from Google Sheets
-    update_positions()  # Get current positions from Polymarket
-    update_orders()     # Get current orders from Polymarket
+    update_markets()    # Get market information from Postgres
+    update_positions()  # Get current positions from Kuest
+    update_orders()     # Get current orders from Kuest
 
 def remove_from_pending():
     """
@@ -81,7 +81,7 @@ async def main():
     Main application entry point. Initializes client, data, and manages websocket connections.
     """
     # Initialize client
-    global_state.client = PolymarketClient()
+    global_state.client = KuestClient()
     
     # Initialize state and fetch initial data
     global_state.all_tokens = []

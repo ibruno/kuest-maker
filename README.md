@@ -1,14 +1,14 @@
-# Poly-Maker
+# Kuest-Maker
 
-A market making bot for Polymarket prediction markets. This bot automates the process of providing liquidity to markets on Polymarket by maintaining orders on both sides of the book with configurable parameters. A summary of my experience running this bot is available [here](https://x.com/defiance_cr/status/1906774862254800934)
+A market making bot for Kuest prediction markets. This bot automates the process of providing liquidity to markets on Kuest by maintaining orders on both sides of the book with configurable parameters. A summary of my experience running this bot is available [here](https://x.com/defiance_cr/status/1906774862254800934)
 
 ## Overview
 
-Poly-Maker is a comprehensive solution for automated market making on Polymarket. It includes:
+Kuest-Maker is a comprehensive solution for automated market making on Kuest. It includes:
 
 - Real-time order book monitoring via WebSockets
 - Position management with risk controls
-- Customizable trade parameters fetched from Google Sheets
+- Customizable trade parameters fetched from Postgres
 - Automated position merging functionality
 - Sophisticated spread and price management
 
@@ -16,18 +16,18 @@ Poly-Maker is a comprehensive solution for automated market making on Polymarket
 
 The repository consists of several interconnected modules:
 
-- `poly_data`: Core data management and market making logic
-- `poly_merger`: Utility for merging positions (based on open-source Polymarket code)
-- `poly_stats`: Account statistics tracking
-- `poly_utils`: Shared utility functions
+- `kuest_data`: Core data management and market making logic
+- `kuest_merger`: Utility for merging positions (based on open-source Kuest code)
+- `kuest_stats`: Account statistics tracking
+- `kuest_utils`: Shared utility functions
 - `data_updater`: Separate module for collecting market information
 
 ## Requirements
 
 - Python 3.9.10 or higher
-- Node.js (for poly_merger)
-- Google Sheets API credentials
-- Polymarket account and API credentials
+- Node.js (for kuest_merger)
+- Postgres database
+- Kuest account and API credentials
 
 ## Installation
 
@@ -74,8 +74,8 @@ uv run python update_stats.py
 #### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/poly-maker.git
-cd poly-maker
+git clone https://github.com/yourusername/kuest-maker.git
+cd kuest-maker
 ```
 
 #### 2. Install Python dependencies
@@ -87,7 +87,7 @@ uv sync
 #### 3. Install Node.js dependencies for the merger
 
 ```bash
-cd poly_merger
+cd kuest_merger
 npm install
 cd ..
 ```
@@ -101,17 +101,28 @@ cp .env.example .env
 #### 5. Configure your credentials in `.env`
 
 Edit the `.env` file with your credentials:
-- `PK`: Your private key for Polymarket
+- `PK`: Your private key for Kuest
 - `BROWSER_ADDRESS`: Your wallet address
+- `DATABASE_URL`: Postgres connection string
 
 **Important:** Make sure your wallet has done at least one trade through the UI so that the permissions are proper.
 
-#### 6. Set up Google Sheets integration
+#### 6. Set up Postgres
 
-- Create a Google Service Account and download credentials to the main directory
-- Copy the [sample Google Sheet](https://docs.google.com/spreadsheets/d/1Kt6yGY7CZpB75cLJJAdWo7LSp9Oz7pjqfuVWwgtn7Ns/edit?gid=1884499063#gid=1884499063)
-- Add your Google service account to the sheet with edit permissions
-- Update `SPREADSHEET_URL` in your `.env` file
+Run the migration:
+
+```bash
+uv run python scripts/migrate.py
+```
+
+Add minimal config rows:
+
+```sql
+INSERT INTO maker_sheet_rows (sheet_name, row_data) VALUES
+('Selected Markets', '{"question":"<market question>","param_type":"default"}'),
+('Hyperparameters', '{"type":"default","param":"trade_size","value":100}'),
+('Hyperparameters', '{"type":"default","param":"max_size","value":200}');
+```
 
 #### 7. Update market data
 
@@ -123,9 +134,9 @@ uv run python update_markets.py
 
 This should run continuously in the background (preferably on a different IP than your trading bot).
 
-- Add markets you want to trade to the "Selected Markets" sheet
-- Select markets from the "Volatility Markets" sheet
-- Configure parameters in the "Hyperparameters" sheet (default parameters that worked well in November are included)
+Update configuration by editing rows in `maker_sheet_rows`:
+- `Selected Markets`: markets you want to trade
+- `Hyperparameters`: config parameters by `type`
 
 #### 8. Start the market making bot
 
@@ -135,16 +146,16 @@ uv run python main.py
 
 ## Configuration
 
-The bot is configured via a Google Spreadsheet with several worksheets:
+The bot is configured via Postgres using the `maker_sheet_rows` table:
 
 - **Selected Markets**: Markets you want to trade
-- **All Markets**: Database of all markets on Polymarket
+- **All Markets**: Database of all markets on Kuest (written by `update_markets.py`)
 - **Hyperparameters**: Configuration parameters for the trading logic
 
 
-## Poly Merger
+## Kuest Merger
 
-The `poly_merger` module is a particularly powerful utility that handles position merging on Polymarket. It's built on open-source Polymarket code and provides a smooth way to consolidate positions, reducing gas fees and improving capital efficiency.
+The `kuest_merger` module is a particularly powerful utility that handles position merging on Kuest. It's built on open-source Kuest code and provides a smooth way to consolidate positions, reducing gas fees and improving capital efficiency.
 
 ## Important Notes
 

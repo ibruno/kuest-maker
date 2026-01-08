@@ -1,11 +1,11 @@
-from poly_data.polymarket_client import PolymarketClient
-from poly_stats.account_stats import update_stats_once
+from kuest_data.kuest_client import KuestClient
+from kuest_stats.account_stats import update_stats_once
 
 import pandas as pd
 import time
 import traceback
 
-client = PolymarketClient()
+client = KuestClient()
 
 if __name__ == '__main__':
     while True:

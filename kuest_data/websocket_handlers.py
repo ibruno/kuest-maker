@@ -3,15 +3,15 @@ import json                        # JSON handling
 import websockets                  # WebSocket client
 import traceback                   # Exception handling
 
-from poly_data.data_processing import process_data, process_user_data
-import poly_data.global_state as global_state
+from kuest_data.data_processing import process_data, process_user_data
+import kuest_data.global_state as global_state
 
 async def connect_market_websocket(chunk):
     """
-    Connect to Polymarket's market WebSocket API and process market updates.
+    Connect to Kuest's market WebSocket API and process market updates.
     
     This function:
-    1. Establishes a WebSocket connection to the Polymarket API
+    1. Establishes a WebSocket connection to the Kuest API
     2. Subscribes to updates for a specified list of market tokens
     3. Processes incoming order book and price updates
     
@@ -22,7 +22,7 @@ async def connect_market_websocket(chunk):
         If the connection is lost, the function will exit and the main loop will
         attempt to reconnect after a short delay.
     """
-    uri = "wss://ws-subscriptions-clob.polymarket.com/ws/market"
+    uri = "wss://ws-subscriptions-clob.kuest.com/ws/market"
     async with websockets.connect(uri, ping_interval=5, ping_timeout=None) as websocket:
         # Prepare and send subscription message
         message = {"assets_ids": chunk}
@@ -50,10 +50,10 @@ async def connect_market_websocket(chunk):
 
 async def connect_user_websocket():
     """
-    Connect to Polymarket's user WebSocket API and process order/trade updates.
+    Connect to Kuest's user WebSocket API and process order/trade updates.
     
     This function:
-    1. Establishes a WebSocket connection to the Polymarket user API
+    1. Establishes a WebSocket connection to the Kuest user API
     2. Authenticates using API credentials
     3. Processes incoming order and trade updates for the user
     
@@ -61,7 +61,7 @@ async def connect_user_websocket():
         If the connection is lost, the function will exit and the main loop will
         attempt to reconnect after a short delay.
     """
-    uri = "wss://ws-subscriptions-clob.polymarket.com/ws/user"
+    uri = "wss://ws-subscriptions-clob.kuest.com/ws/user"
 
     async with websockets.connect(uri, ping_interval=5, ping_timeout=None) as websocket:
         # Prepare authentication message with API credentials

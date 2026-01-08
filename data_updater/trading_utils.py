@@ -1,4 +1,4 @@
-from py_clob_client.constants import POLYGON
+from py_clob_client.constants import AMOY, POLYGON
 from py_clob_client.client import ClobClient
 from py_clob_client.clob_types import OrderArgs, BalanceAllowanceParams, AssetType
 from py_clob_client.order_builder.constants import BUY
@@ -18,9 +18,9 @@ import os
 MAX_INT = 2**256 - 1
 
 def get_clob_client():
-    host = "https://clob.polymarket.com"
+    host = "https://clob.kuest.com"
     key = os.getenv("PK")
-    chain_id = POLYGON
+    chain_id = AMOY  # Mainnet: POLYGON
     
     if key is None:
         print("Environment variable 'PK' cannot be found")
@@ -40,7 +40,9 @@ def get_clob_client():
 
 
 def approveContracts():
-    web3 = Web3(Web3.HTTPProvider("https://polygon-rpc.com"))
+    rpc_url = os.getenv("AMOY_RPC_URL", "https://rpc-amoy.polygon.technology/")
+    # Mainnet RPC: https://polygon-rpc.com
+    web3 = Web3(Web3.HTTPProvider(rpc_url))
     web3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
     wallet = web3.eth.account.from_key(os.getenv("PK"))
     
@@ -48,17 +50,24 @@ def approveContracts():
     with open('erc20ABI.json', 'r') as file:
         erc20_abi = json.load(file)
 
-    ctf_address = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
+    ctf_address = "0x9432978d0f8A0E1a5317DD545B4a9ad32da8AD59"
     erc1155_set_approval = """[{"inputs": [{ "internalType": "address", "name": "operator", "type": "address" },{ "internalType": "bool", "name": "approved", "type": "bool" }],"name": "setApprovalForAll","outputs": [],"stateMutability": "nonpayable","type": "function"}]"""
 
-    usdc_contract = web3.eth.contract(address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", abi=erc20_abi)   # usdc.e
+    usdc_contract = web3.eth.contract(
+        address="0x29604FdE966E3AEe42d9b5451BD9912863b3B904",  # Mainnet: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+        abi=erc20_abi,
+    )
     ctf_contract = web3.eth.contract(address=ctf_address, abi=erc1155_set_approval)
     
 
-    for address in ['0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E', '0xC5d563A36AE78145C45a50134d48A1215220f80a', '0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296']:
+    for address in [
+        "0xE79717fE8456C620cFde6156b6AeAd79C4875Ca2",
+        "0xe2ed8eE54fa279b1006333EbeE68192EDB141207",
+        "0xA8D45917999a9c3833C797EFfB31e3D878e27A33",
+    ]:
         usdc_nonce = web3.eth.get_transaction_count( wallet.address )
         raw_usdc_txn = usdc_contract.functions.approve(address, int(MAX_INT, 0)).build_transaction({
-            "chainId": 137, 
+            "chainId": 80002, 
             "from": wallet.address, 
             "nonce": usdc_nonce
         })
@@ -72,7 +81,7 @@ def approveContracts():
         ctf_nonce = web3.eth.get_transaction_count( wallet.address )
         
         raw_ctf_approval_txn = ctf_contract.functions.setApprovalForAll(address, True).build_transaction({
-            "chainId": 137, 
+            "chainId": 80002, 
             "from": wallet.address, 
             "nonce": ctf_nonce
         })
@@ -87,8 +96,8 @@ def approveContracts():
 
 
     nonce = web3.eth.get_transaction_count( wallet.address )
-    raw_txn_2 = usdc_contract.functions.approve("0xC5d563A36AE78145C45a50134d48A1215220f80a", int(MAX_INT, 0)).build_transaction({
-        "chainId": 137, 
+    raw_txn_2 = usdc_contract.functions.approve("0xe2ed8eE54fa279b1006333EbeE68192EDB141207", int(MAX_INT, 0)).build_transaction({
+        "chainId": 80002, 
         "from": wallet.address, 
         "nonce": nonce
     })
@@ -97,8 +106,8 @@ def approveContracts():
 
 
     nonce = web3.eth.get_transaction_count( wallet.address )
-    raw_txn_3 = usdc_contract.functions.approve("0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296", int(MAX_INT, 0)).build_transaction({
-        "chainId": 137, 
+    raw_txn_3 = usdc_contract.functions.approve("0xA8D45917999a9c3833C797EFfB31e3D878e27A33", int(MAX_INT, 0)).build_transaction({
+        "chainId": 80002, 
         "from": wallet.address, 
         "nonce": nonce
     })

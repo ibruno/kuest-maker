@@ -1,7 +1,7 @@
 {
-  "name": "poly-merger",
+  "name": "kuest-merger",
   "version": "1.0.0",
-  "description": "Position merging utility for Polymarket",
+  "description": "Position merging utility for Kuest",
   "main": "merge.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
